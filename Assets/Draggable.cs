@@ -13,6 +13,7 @@ public class RestrictDimension{
 public class Draggable : MonoBehaviour {
 
 	public bool attachToCenterOfMass = false;
+	public LayerMask layerMask = -1;
 	public bool doNotBreak = false;
 	public bool drawLine = true;
 	public float spring = 50.0f;
@@ -23,7 +24,7 @@ public class Draggable : MonoBehaviour {
 	public float breakTorqueModifier = 0f;
 	public float lineWidth = 0.1f;
 	public float strength = 1f;
-	public Color lineColor = Color.white;
+	public Material lineMaterial;
 	public RestrictDimension restrict = new RestrictDimension();
 	public bool doDebug = false;
 	private float drag;
@@ -44,7 +45,7 @@ public class Draggable : MonoBehaviour {
 	private Rigidbody rigibody;
 	private GameObject dragger;
 	private GameObject hook;
-	private float hookScale = 0.2f;
+	private float hookScale = 0.1f;
 	private float halfHookScale;
 	private Rigidbody rb;
 
@@ -83,7 +84,7 @@ public class Draggable : MonoBehaviour {
 
 		// We need to actually hit an object
 		RaycastHit hit;
-		bool doesHit = Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 100);
+		bool doesHit = Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 100, layerMask.value);
 		
 		if(!holdingAnObject && !doesHit || !hit.rigidbody || hit.rigidbody.isKinematic){return;}
 		
@@ -107,13 +108,12 @@ public class Draggable : MonoBehaviour {
 				line = dragger.AddComponent("LineRenderer") as LineRenderer;
 				line.SetWidth(lineWidth, lineWidth);
 				line.SetVertexCount(2);
-				line.renderer.material.color = lineColor;
+				line.renderer.material = lineMaterial;
 				line.renderer.enabled = true;
 			}
 			hook = GameObject.CreatePrimitive(PrimitiveType.Cube);
 			hook.transform.localScale = new Vector3(hookScale, hookScale, hookScale);
-			hook.renderer.material = new Material(Shader.Find("Diffuse"));
-			hook.renderer.material.color = lineColor;
+			hook.renderer.material = lineMaterial;
 			hook.renderer.enabled = drawLine;
 		}
 		if (!springJoint){
