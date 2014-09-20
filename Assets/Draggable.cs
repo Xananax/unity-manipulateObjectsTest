@@ -1,14 +1,6 @@
 ﻿using UnityEngine;
 using System;
 using System.Collections;
-using System.Collections.Generic;
-
-[Serializable]
-public class RestrictDimension{
-	public bool x = false;
-	public bool y = false;
-	public bool z = false;
-}
 
 public class Draggable : MonoBehaviour {
 
@@ -40,6 +32,7 @@ public class Draggable : MonoBehaviour {
 	private float oldZ;
 	private RigidbodyConstraints oldConstraints;
 	private bool mousePressed = false;
+	private bool previousMousePressed = false;
 	private LineRenderer line;
 	private SpringJoint springJoint;
 	private Rigidbody rigibody;
@@ -75,19 +68,22 @@ public class Draggable : MonoBehaviour {
 		mousePressed = Input.GetButton("Fire1");
 		if (!mousePressed){
 			DetachSpringJoint();
+			previousMousePressed = false;
 			return;
 		}
 		if(mousePressed && !springJoint && holdingAnObject){ //springJoint broke
 			OnJointBreak();
+			previousMousePressed = true;
 			return;
 		}
 
 		// We need to actually hit an object
 		RaycastHit hit;
-		bool doesHit = Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 100, layerMask.value);
+		bool doesHit = Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 100, holdingAnObject?-1:layerMask.value);
 		
-		if(!holdingAnObject && !doesHit || !hit.rigidbody || hit.rigidbody.isKinematic){return;}
-		
+		if(!holdingAnObject && !doesHit || !hit.rigidbody || hit.rigidbody.isKinematic){previousMousePressed = true;return;}
+		if(!holdingAnObject && previousMousePressed==true){previousMousePressed=true;return;} //we only want to trigger hold if the click happens on the object
+		previousMousePressed = true;
 		if(!holdingAnObject){
 			holdingAnObject = true;
 			rb = hit.rigidbody;
