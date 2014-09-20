@@ -29,7 +29,6 @@ public class Draggable : MonoBehaviour {
 	private float drag;
 	private float angularDrag;
 	private float mass;
-	private bool invalid = false;
 	private float breakForce = Mathf.Infinity;
 	private float breakTorque = Mathf.Infinity;
 	private bool holdingAnObject = false;
@@ -48,31 +47,29 @@ public class Draggable : MonoBehaviour {
 	private float hookScale = 0.2f;
 	private float halfHookScale;
 	private Rigidbody rb;
-	
+
 	void Start(){
-		rb = GetComponent<Rigidbody>();
-		if(!rb){invalid = true;return;}
-		ApplyRigidBodyValues();
 		halfHookScale = hookScale/2;
 	}
 
 	void ApplyRigidBodyValues(){
-		mass = rb.mass;
-		drag = rb.drag;
-		angularDrag = rb.angularDrag;
-		if(!doNotBreak){
-			float growth = (mass / Mathf.Pow(mass,2))*strength;
-			breakForce = growth + breakForceModifier;
-			breakTorque = growth + breakTorqueModifier;
-		}else{
-			breakForce = Mathf.Infinity;
-			breakTorque = Mathf.Infinity;
+		if(rb){
+			mass = rb.mass;
+			drag = rb.drag;
+			angularDrag = rb.angularDrag;
+			if(!doNotBreak){
+				float growth = (mass / Mathf.Pow(mass,2))*strength;
+				breakForce = growth + breakForceModifier;
+				breakTorque = growth + breakTorqueModifier;
+			}else{
+				breakForce = Mathf.Infinity;
+				breakTorque = Mathf.Infinity;
+			}
 		}
 	}
 			
 	void FixedUpdate (){
 		if(doDebug){ApplyRigidBodyValues();}
-		if(invalid){return;}
 		// Make sure the user pressed the mouse down
 		mousePressed = Input.GetButton("Fire1");
 		if (!mousePressed){
@@ -88,12 +85,14 @@ public class Draggable : MonoBehaviour {
 		RaycastHit hit;
 		bool doesHit = Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 100);
 		
-		if(!holdingAnObject && !doesHit || !hit.rigidbody || hit.rigidbody.isKinematic || hit.rigidbody!=rb){return;}
+		if(!holdingAnObject && !doesHit || !hit.rigidbody || hit.rigidbody.isKinematic){return;}
 		
 		if(!holdingAnObject){
+			holdingAnObject = true;
+			rb = hit.rigidbody;
+			ApplyRigidBodyValues();
 			CreateSpringJoint();
 			AttachSpringJoint(hit);
-			holdingAnObject = true;
 		}
 		if(doDebug){ApplySpringJointValues();}
 		StartCoroutine("DragObject",hit.distance);
@@ -115,7 +114,6 @@ public class Draggable : MonoBehaviour {
 			hook.transform.localScale = new Vector3(hookScale, hookScale, hookScale);
 			hook.renderer.material = new Material(Shader.Find("Diffuse"));
 			hook.renderer.material.color = lineColor;
-			hook.transform.parent = transform;
 			hook.renderer.enabled = drawLine;
 		}
 		if (!springJoint){
@@ -145,6 +143,7 @@ public class Draggable : MonoBehaviour {
 		else{
 			springJoint.anchor = Vector3.zero;
 		}
+		hook.transform.parent = rb.transform;
 		hook.transform.position = new Vector3(hit.point.x+halfHookScale,hit.point.y+halfHookScale,hit.point.z+halfHookScale);
 		springJoint.connectedBody = hit.rigidbody;
 		oldDrag = springJoint.connectedBody.drag;
@@ -178,8 +177,9 @@ public class Draggable : MonoBehaviour {
 	}
 	
 	void Restore(){
-		drag = oldDrag;
-		angularDrag = oldAngularDrag;
+		rb.drag = oldDrag;
+		rb.angularDrag = oldAngularDrag;
+		rb.constraints = oldConstraints;
 		holdingAnObject = false;
 		if(springJoint){
 			springJoint.connectedBody = null;
@@ -188,7 +188,7 @@ public class Draggable : MonoBehaviour {
 			line.renderer.enabled = false;
 			hook.renderer.enabled = false;
 		}
-		rb.constraints = oldConstraints;
+		rb = null;
 	}
 	
 	void DetachSpringJoint(){
