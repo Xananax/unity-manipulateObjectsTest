@@ -17,8 +17,8 @@ public class Draggable : MonoBehaviour {
 	public float strength = 1f;
 	public float lineWidth = 0.1f;
 	public Material lineMaterial;
-	public RestrictDimension restrict = new RestrictDimension();
 	public float mouseHorizon = Mathf.Infinity;
+	public RestrictDimension restrict = new RestrictDimension();
 	public bool doDebug = false;
 	
 	private float drag;

@@ -19,12 +19,17 @@ public class SimpleDraggable : MonoBehaviour {
 	private GameObject hook;
 	private float hookScale = 0.1f;
 	
+	//public bool attachToCenterOfMass = false;
+	public LayerMask layerMask = -1;
+	//public bool doNotBreak = false;
 	public bool drawLine = true;
+	//public float spring = 50.0f;
+	//public float damper = 5.0f;
+	public float smooth = 5f;
+	//public float strength = 1f;
 	public float lineWidth = 0.1f;
 	public Material lineMaterial;
 	public float maxDistance = 40f;
-	public float smooth = 5f;
-	public LayerMask layerMask = -1;
 	public float mouseHorizon = Mathf.Infinity;
 	public RestrictDimension restrict = new RestrictDimension();
 	
