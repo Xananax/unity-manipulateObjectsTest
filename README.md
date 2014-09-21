@@ -33,7 +33,7 @@ Break Force (speed) and Break Torque (fast change of direction) that can break t
 ## Auxiliary Classes
 
 ### Line.cs
-Draws a line
+Draws a line  
 Properties
 
 - `width`: sets the line width
@@ -67,12 +67,14 @@ A simple shader that takes a color and transparency. Useful for UI objects that 
 
 ### FollowMouse.cs
 A simple script that makes an object follow the mouse. Set it on the object that you want to use. It will follow the mouse on X and Z axis, leaving the Y intact. Useful for setting a light that follows the mouse, for example.
+
 properties
-	- `Max Distance`: The distance after which the object stops following the mouse
-	- `Smooth`: Smoothness of the movement. Lower is smoother.
+
+- `Max Distance`: The distance after which the object stops following the mouse
+- `Smooth`: Smoothness of the movement. Lower is smoother.
 
 ### KeyboardOrbit.cs
-A modified version of KeyboardOrbit.cs found on the (unity wiki)[http://wiki.unity3d.com/index.php/Scripts/Controllers]   
+A modified version of KeyboardOrbit.cs found on the [unity wiki](http://wiki.unity3d.com/index.php/Scripts/Controllers)  
 Set it on a camera, then click on an object to focus on it, WASD to orbit, mousewheel to zoom in and out.
 
 Properties:
