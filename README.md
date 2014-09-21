@@ -11,21 +11,24 @@ Break Force (speed) and Break Torque (fast change of direction) that can break t
 
 #### Properties
 
-- `Attach to Center of Mass`: if true, will attach to the center of the object instead of click coordinates
-- `Layer Mask`: Use to restrict to certain layers
-- `Do Not Break`: Do not break link between mouse and object, even if strong forces are applied
-- `Draw Line`: if true, will draw a line between the object and the mouse
-- `Spring`: How springy the joint is
-- `Damper`: How much dampness does the joint uses
-- `Distance`: The distance between the mouse and the clicked point
-- `Smooth`: How smooth the movement is. 1 is very smooth, 10 follows the mouse almost exactly
-- `Break Force Modifier`: gets added to the automatically calculated Break Force. Set it to minus to make the Joint stronger
-- `Break Torque Modifier`: gets added to the automatically calculated Break Torque. Set it to minus to make the joint stronger
-- `Strength`: How strong the mouse is. The higher this value, the easier it will be to lift heavy objects
-- `Line Width`: The width of the line between the object and the mouse
-- `Line Material`: The material of the line (it is advised to set it to something self-illuminated and without shadows; a suitable shader is provided in the repo)
+- `Attach to Center of Mass (bool)`: if true, will attach to the center of the object instead of click coordinates
+- `Layer Mask (int)`: Use to restrict to certain layers
+- `Do Not Break (bool)`: Do not break link between mouse and object, even if strong forces are applied
+- `Draw Line (bool)`: if true, will draw a line between the object and the mouse
+- `Spring (float)`: How springy the joint is
+- `Damper (float)`: How much dampness does the joint uses
+- `Distance (float)`: The distance between the mouse and the clicked point
+- `Smooth (float)`: How smooth the movement is. 1 is very smooth, 10 follows the mouse almost exactly
+- `Break Force Modifier (float)`: gets added to the automatically calculated Break Force. Set it to minus to make the Joint stronger
+- `Break Torque Modifier (float)`: gets added to the automatically calculated Break Torque. Set it to minus to make the joint stronger
+- `Strength (float)`: How strong the mouse is. The higher this value, the easier it will be to lift heavy objects
+- `Line Width (float)`: The width of the line between the object and the mouse
+- `Line Material (Material)`: The material of the line (it is advised to set it to something self-illuminated and without shadows; a suitable shader is provided in the repo)
 - `Restrict`: allows to restrict movement to the X, Y, or Z plane
-- `Mouse Horizon`: Where does the ray cast from the mouse stops detecting objects
+	- `x (bool)`: restricts to x axis
+	- `y (bool)`: restricts to y axis
+	- `z (bool)`: ...
+- `Mouse Horizon (float)`: Where does the ray cast from the mouse stops detecting objects
 
 -----
 ## SimpleDraggable.cs
@@ -36,18 +39,18 @@ Break Force (speed) and Break Torque (fast change of direction) that can break t
 Draws a line  
 Properties
 
-- `width`: sets the line width
-- `material`: sets the line material
-- `pointA`: sets the first point of the line
-- `pointB`: sets the second point of the line
-- `distance`: gets the distance between the two points
-- `visible`: makes the line visible or invisible
+- `width (float)`: sets the line width
+- `material (Material)`: sets the line material
+- `pointA (Vector3)`: sets the first point of the line
+- `pointB (Vector3)`: sets the second point of the line
+- `distance`: gets the distance between the two points, returns a float
+- `visible (bool)`: makes the line visible or invisible
 
 Methods
 
-- `Enable()`: enables the line (alternative to line.visible=true)
-- `Disable()`: disables the line (alternative to line.visible=false)
-- `SetPoints(Vector3 a, Vector3 b)`: Sets the two points (alternative to using line.pointA, line.pointB)
+- `void Enable()`: enables the line (alternative to line.visible=true)
+- `void Disable()`: disables the line (alternative to line.visible=false)
+- `void SetPoints(Vector3 a, Vector3 b)`: Sets the two points (alternative to using line.pointA, line.pointB)
 
 ### RestrictDimension.cs
 
@@ -70,8 +73,8 @@ A simple script that makes an object follow the mouse. Set it on the object that
 
 properties
 
-- `Max Distance`: The distance after which the object stops following the mouse
-- `Smooth`: Smoothness of the movement. Lower is smoother.
+- `Max Distance (float)`: The distance after which the object stops following the mouse
+- `Smooth (float)`: Smoothness of the movement. Lower is smoother.
 
 ### KeyboardOrbit.cs
 A modified version of KeyboardOrbit.cs found on the [unity wiki](http://wiki.unity3d.com/index.php/Scripts/Controllers)  
@@ -79,9 +82,9 @@ Set it on a camera, then click on an object to focus on it, WASD to orbit, mouse
 
 Properties:
 
-- `Layer Mask`: Which objects are selectable to rotate around
-- `Target`: Start Target to rotate around
-- `Distance`: default starting distance
+- `Layer Mask (mask)`: Which objects are selectable to rotate around
+- `Target (GameObject)`: Start Target to rotate around
+- `Distance (float)`: default starting distance
 
 Other properties are not very important...The script is quite messy.
 
