@@ -79,9 +79,9 @@ Set it on a camera, then click on an object to focus on it, WASD to orbit, mouse
 
 Properties:
 
--`Layer Mask`: Which objects are selectable to rotate around
--`Target`: Start Target to rotate around
--`Distance`: default starting distance
+- `Layer Mask`: Which objects are selectable to rotate around
+- `Target`: Start Target to rotate around
+- `Distance`: default starting distance
 
 Other properties are not very important...The script is quite messy.
 
