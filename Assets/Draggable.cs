@@ -14,11 +14,13 @@ public class Draggable : MonoBehaviour {
 	public float smooth = 5f;
 	public float breakForceModifier = 0f;
 	public float breakTorqueModifier = 0f;
-	public float lineWidth = 0.1f;
 	public float strength = 1f;
+	public float lineWidth = 0.1f;
 	public Material lineMaterial;
 	public RestrictDimension restrict = new RestrictDimension();
+	public float mouseHorizon = Mathf.Infinity;
 	public bool doDebug = false;
+	
 	private float drag;
 	private float angularDrag;
 	private float mass;
@@ -79,7 +81,7 @@ public class Draggable : MonoBehaviour {
 
 		// We need to actually hit an object
 		RaycastHit hit;
-		bool doesHit = Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 100, holdingAnObject?-1:layerMask.value);
+		bool doesHit = Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, mouseHorizon, holdingAnObject?-1:layerMask.value);
 		
 		if(!holdingAnObject && !doesHit || !hit.rigidbody || hit.rigidbody.isKinematic){previousMousePressed = true;return;}
 		if(!holdingAnObject && previousMousePressed==true){previousMousePressed=true;return;} //we only want to trigger hold if the click happens on the object
@@ -97,8 +99,8 @@ public class Draggable : MonoBehaviour {
 	
 	void CreateSpringJoint(){
 		if(!dragger){
-			dragger = new GameObject("Rigidbody dragger");
-			Rigidbody body = dragger.AddComponent ("Rigidbody") as Rigidbody;
+			dragger = new GameObject("Rigidbody DraggableDragger");
+			Rigidbody body = dragger.AddComponent("Rigidbody") as Rigidbody;
 			body.isKinematic = true;
 			if(drawLine){
 				line = dragger.AddComponent("LineRenderer") as LineRenderer;
@@ -106,14 +108,17 @@ public class Draggable : MonoBehaviour {
 				line.SetVertexCount(2);
 				line.renderer.material = lineMaterial;
 				line.renderer.enabled = true;
+				line.name = "DraggableLine";
 			}
 			hook = GameObject.CreatePrimitive(PrimitiveType.Cube);
+			hook.name = "DraggableHook";
 			hook.transform.localScale = new Vector3(hookScale, hookScale, hookScale);
 			hook.renderer.material = lineMaterial;
 			hook.renderer.enabled = drawLine;
 		}
 		if (!springJoint){
 			springJoint = dragger.AddComponent ("SpringJoint") as SpringJoint;
+			springJoint.name = "DraggableSpringJoint";
 			ApplySpringJointValues();
 		}
 	}

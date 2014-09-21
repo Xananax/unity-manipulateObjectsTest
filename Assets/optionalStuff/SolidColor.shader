@@ -1,12 +1,16 @@
-﻿Shader "Solid Color" {
+﻿Shader "Custom/Solid Color" {
  
-	Properties {
-		_Color ("Color", Color) = (1,1,1)
-	}
-	 
-	SubShader {
-		Color [_Color]
-		Pass {}
-	} 
- 
+    Properties {
+        _Color("Color", Color) = (0, 0, 0, 1)
+    }
+    SubShader {
+        Lighting Off
+        ZWrite Off
+        Cull Back
+        Blend SrcAlpha OneMinusSrcAlpha
+        Tags {"Queue" = "Transparent"}
+        Color[_Color]
+        Pass {}
+    } 
+    FallBack "Unlit/Transparent"
 }
