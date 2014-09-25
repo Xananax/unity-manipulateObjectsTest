@@ -830,9 +830,11 @@ MonoBehaviour:
     m_Bits: 512
   drawLine: 1
   smooth: 5
+  strength: 10
   lineWidth: .100000001
   lineMaterial: {fileID: 2100000, guid: 5abb9373d5c849f409c8d50bb1010ff1, type: 2}
   maxDistance: Infinity
+  deriveDistanceFromMass: 0
   mouseHorizon: Infinity
   restrict:
     x: 0
@@ -1705,7 +1707,7 @@ Transform:
   m_GameObject: {fileID: 1311887660}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -.207577705, y: 0, z: .665498734}
-  m_LocalScale: {x: 5, y: 5, z: 5}
+  m_LocalScale: {x: 20, y: 5, z: 20}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 6
