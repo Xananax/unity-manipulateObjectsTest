@@ -40,7 +40,7 @@ public class KeyboardOrbit : MonoBehaviour {
 	}
 	
 	void Update (){
-		if (Input.GetButtonUp("Fire2") || Input.GetButtonUp("Fire1")){
+		if (Input.GetButtonUp("Fire2")){
 			RaycastHit hit;
 			if(Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 100, layerMask.value)){
 				target = hit.transform;

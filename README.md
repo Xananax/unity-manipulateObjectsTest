@@ -6,7 +6,7 @@ Mainly you'll find:
 
 ## Draggable.cs
 
-Attach to any object in the scene to make Rigidbodies draggable.  
+Attach to any object in the scene to make all Rigidbodies draggable (or those on a layer you select).  
 Break Force (speed) and Break Torque (fast change of direction) that can break the joint between the mouse and the object are dependant on the object's mass that is set in it's Rigibody.
 
 #### Properties
@@ -28,10 +28,39 @@ Break Force (speed) and Break Torque (fast change of direction) that can break t
 	- `x (bool)`: restricts to x axis
 	- `y (bool)`: restricts to y axis
 	- `z (bool)`: ...
+- `Max Distance (float)`: if user drags over that distance, the bond will break
 - `Mouse Horizon (float)`: Where does the ray cast from the mouse stops detecting objects
+
+Note: I'm not sure that having the break force and torque automatically calculated from the mass is a good idea; However, I didn't want to add this script on each relevant object and so I had to devise a way to obtain those values automatically. I've added the modifiers and strength in order to keep some control over this value. If you have a better idea, I'm all ears.
+
+-----
+## ForceDraggable.cs
+
+Same as Draggable.cs, but uses gravity and forces. In other words, the object you're transporting will still be subject to all the forces that may be applied on it.  
+It has all the exact same properties as Draggable.cs
+
 
 -----
 ## SimpleDraggable.cs
+
+A simpler draggable class that does not require a rigidbody (but works if a rigidbody is present too).
+
+#### Properties
+
+- `Layer Mask (int)`: Use to restrict to certain layers
+- `Draw Line (bool)`: if true, will draw a line between the object and the mouse
+- `Smooth (float)`: How smooth the movement is. 1 is very smooth, 10 follows the mouse almost exactly
+- `Strength (float)`: How strong the mouse is. The higher this value, the easier it will be to lift heavy objects
+- `Line Width (float)`: The width of the line between the object and the mouse
+- `Line Material (Material)`: The material of the line (it is advised to set it to something self-illuminated and without shadows; a suitable shader is provided in the repo)
+- `Max Distance (float)`: if user drags over that distance, the bond will break
+- `Derive Distance From Mass`: if true, will try set the `Max Distance` as a proportion of mass. Mass will be derived from the rigidbody, if there is one, or from the object's volume (assuming density is 1, so a 1m object will weight 100k); To be able to lift heavier objects, dial the `strength` property.
+- `Mouse Horizon (float)`: Where does the ray cast from the mouse stops detecting objects
+- `Restrict`: allows to restrict movement to the X, Y, or Z plane
+	- `x (bool)`: restricts to x axis
+	- `y (bool)`: restricts to y axis
+	- `z (bool)`: ...
+
 -----
 ## Auxiliary Classes
 

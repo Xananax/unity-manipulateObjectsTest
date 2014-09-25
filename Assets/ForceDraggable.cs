@@ -2,7 +2,7 @@
 using System;
 using System.Collections;
 
-public class Draggable : MonoBehaviour {
+public class ForceDraggable : MonoBehaviour {
 
 	public bool attachToCenterOfMass = false;
 	public LayerMask layerMask = -1;
@@ -22,21 +22,18 @@ public class Draggable : MonoBehaviour {
 	public RestrictDimension restrict = new RestrictDimension();
 	public bool doDebug = false;
 	
-	private Line line;
 	private float drag;
 	private float angularDrag;
 	private float mass;
 	public float breakForce = Mathf.Infinity;
-	public float breakTorque = Mathf.Infinity;
+	private float breakTorque = Mathf.Infinity;
 	private bool holdingAnObject = false;
-	private float oldDrag = 0f;
-	private float oldAngularDrag = 0f;
 	private float oldX;
 	private float oldY;
 	private float oldZ;
-	private RigidbodyConstraints oldConstraints;
 	private bool mousePressed = false;
 	private bool previousMousePressed = false;
+	private Line line;
 	private SpringJoint springJoint;
 	private Rigidbody rigibody;
 	private GameObject dragger;
@@ -44,59 +41,57 @@ public class Draggable : MonoBehaviour {
 	private float hookScale = 0.1f;
 	private float halfHookScale;
 	private Rigidbody rb;
-
+	
 	void Start(){
 		halfHookScale = hookScale/2;
 	}
-
+	
 	void ApplyRigidBodyValues(){
 		if(rb){
 			mass = rb.mass;
-			drag = rb.drag;
-			angularDrag = rb.angularDrag;
 			if(!doNotBreak){
 				float growth = (mass / Mathf.Pow(mass,2))*strength;
-				breakForce = growth + breakForceModifier;
-				breakTorque = growth + breakTorqueModifier;
+				breakForce = Mathf.Clamp(growth + breakForceModifier,0.01f,Mathf.Infinity);
+				breakTorque = Mathf.Clamp(growth + breakTorqueModifier,0.01f,Mathf.Infinity);
 			}else{
 				breakForce = Mathf.Infinity;
 				breakTorque = Mathf.Infinity;
 			}
 		}
 	}
-			
-	void FixedUpdate (){
-		if(doDebug){ApplyRigidBodyValues();}
+	
+	void Update(){
 		// Make sure the user pressed the mouse down
 		mousePressed = Input.GetButton("Fire1");
+	}
+	
+	void FixedUpdate (){;
 		if (!mousePressed){
 			DetachSpringJoint();
 			previousMousePressed = false;
-			return;
 		}
-		if(mousePressed && !springJoint && holdingAnObject){ //springJoint broke
+		else if(mousePressed && !springJoint && holdingAnObject){ //springJoint broke
 			OnJointBreak();
 			previousMousePressed = true;
-			return;
+		}else{
+			// We need to actually hit an object
+			RaycastHit hit;
+			bool doesHit = Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, mouseHorizon, holdingAnObject?-1:layerMask.value);
+			
+			if(!holdingAnObject && !doesHit || !hit.rigidbody || hit.rigidbody.isKinematic){previousMousePressed = true;return;}
+			if(!holdingAnObject && previousMousePressed==true){previousMousePressed=true;return;} //we only want to trigger hold if the click happens on the object
+			if(holdingAnObject && !doesHit){previousMousePressed=true;DetachSpringJoint();return;}
+			previousMousePressed = true;
+			if(!holdingAnObject){
+				holdingAnObject = true;
+				rb = hit.rigidbody;
+				ApplyRigidBodyValues();
+				CreateSpringJoint();
+				AttachSpringJoint(hit);
+			}
+			if(doDebug){ApplySpringJointValues();}
+			StartCoroutine("DragObject",hit.distance);
 		}
-
-		// We need to actually hit an object
-		RaycastHit hit;
-		bool doesHit = Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, mouseHorizon, holdingAnObject?-1:layerMask.value);
-		
-		if(!holdingAnObject && !doesHit || !hit.rigidbody || hit.rigidbody.isKinematic){previousMousePressed = true;return;}
-		if(!holdingAnObject && previousMousePressed==true){previousMousePressed=true;return;} //we only want to trigger hold if the click happens on the object
-		if(holdingAnObject && !doesHit){previousMousePressed=true;DetachSpringJoint();return;}
-		previousMousePressed = true;
-		if(!holdingAnObject){
-			holdingAnObject = true;
-			rb = hit.rigidbody;
-			ApplyRigidBodyValues();
-			CreateSpringJoint();
-			AttachSpringJoint(hit);
-		}
-		if(doDebug){ApplySpringJointValues();}
-		StartCoroutine("DragObject",hit.distance);
 	}
 	
 	void CreateSpringJoint(){
@@ -104,12 +99,15 @@ public class Draggable : MonoBehaviour {
 			dragger = new GameObject("Rigidbody DraggableDragger");
 			Rigidbody body = dragger.AddComponent("Rigidbody") as Rigidbody;
 			body.isKinematic = true;
-			if(drawLine){
-				line = dragger.AddComponent("Line") as Line;
-				line.width = lineWidth;
-				line.material = lineMaterial;
-				line.name = "DraggableLine";
-			}
+			body.useGravity = false;
+		}
+		if(drawLine && !line){
+			line = dragger.AddComponent("Line") as Line;
+			line.width = lineWidth;
+			line.material = lineMaterial;
+			line.name = "ForceDraggableLine";
+		}
+		if(!hook){
 			hook = GameObject.CreatePrimitive(PrimitiveType.Cube);
 			hook.name = "DraggableHook";
 			hook.transform.localScale = new Vector3(hookScale, hookScale, hookScale);
@@ -122,7 +120,7 @@ public class Draggable : MonoBehaviour {
 			ApplySpringJointValues();
 		}
 	}
-
+	
 	void ApplySpringJointValues(){
 		if(springJoint){
 			springJoint.spring = spring;
@@ -132,9 +130,14 @@ public class Draggable : MonoBehaviour {
 			springJoint.breakTorque = breakTorque;
 		}
 	}
-			
+	
 	void AttachSpringJoint(RaycastHit hit){
 		if(springJoint.connectedBody){return;}
+		hook.transform.parent = rb.transform;
+		hook.transform.position = new Vector3(hit.point.x+halfHookScale,hit.point.y+halfHookScale,hit.point.z+halfHookScale);
+		dragger.rigidbody.position = hit.point;
+		dragger.rigidbody.isKinematic = false;
+		dragger.rigidbody.useGravity = true;
 		springJoint.transform.position = hit.point;
 		if (attachToCenterOfMass){
 			Vector3 anchor = transform.TransformDirection(hit.rigidbody.centerOfMass) + hit.rigidbody.transform.position;
@@ -144,28 +147,10 @@ public class Draggable : MonoBehaviour {
 		else{
 			springJoint.anchor = Vector3.zero;
 		}
-		hook.transform.parent = rb.transform;
-		hook.transform.position = new Vector3(hit.point.x+halfHookScale,hit.point.y+halfHookScale,hit.point.z+halfHookScale);
 		springJoint.connectedBody = hit.rigidbody;
-		oldDrag = springJoint.connectedBody.drag;
-		oldAngularDrag = springJoint.connectedBody.angularDrag;
 		oldX = transform.position.x;
 		oldY = transform.position.y;
 		oldZ = transform.position.z;
-		springJoint.connectedBody.drag = drag;
-		springJoint.connectedBody.angularDrag = angularDrag;
-		oldConstraints = rb.constraints; //will return constraints to values set when game was started...sucks
-		if(restrict.x || restrict.y || restrict.z){
-			if(restrict.x){
-				rb.constraints = rb.constraints | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ | RigidbodyConstraints.FreezePositionX;
-			}
-			if(restrict.y){
-				rb.constraints = rb.constraints | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ | RigidbodyConstraints.FreezePositionY;
-			}
-			if(restrict.z){
-				rb.constraints = rb.constraints | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezePositionZ;
-			}
-		}
 		if(drawLine && line){
 			line.visible = true;
 			hook.renderer.enabled = true;
@@ -177,9 +162,6 @@ public class Draggable : MonoBehaviour {
 	}
 	
 	void Restore(){
-		rb.drag = oldDrag;
-		rb.angularDrag = oldAngularDrag;
-		rb.constraints = oldConstraints;
 		holdingAnObject = false;
 		if(springJoint){
 			springJoint.connectedBody = null;
@@ -189,6 +171,10 @@ public class Draggable : MonoBehaviour {
 			hook.renderer.enabled = false;
 		}
 		rb = null;
+		dragger.rigidbody.isKinematic = false;
+		dragger.rigidbody.velocity = new Vector3(0,0,0);
+		dragger.rigidbody.isKinematic = true;
+		dragger.rigidbody.useGravity = false;
 	}
 	
 	void DetachSpringJoint(){
@@ -213,7 +199,7 @@ public class Draggable : MonoBehaviour {
 					yield return false;
 				}
 			}
-			dragger.transform.position = Vector3.Lerp(dragger.transform.position, point,smooth*Time.deltaTime);
+			dragger.rigidbody.AddForce(point-dragger.transform.position,ForceMode.Force);
 			yield return false;
 		}
 	}

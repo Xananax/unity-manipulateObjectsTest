@@ -9,30 +9,27 @@ public class SimpleDraggable : MonoBehaviour {
 	private bool rigidBodyKinematic = false;
 	private Transform currentObject;
 	private Rigidbody currentRigidBody;
+	private RigidbodyConstraints oldConstraints;
 	private Vector3 objectPosition;
 	private Vector3 objectHitPoint;
-	private float oldX;
-	private float oldY;
-	private float oldZ;
+	private Vector3 old;
 	private Vector3 offset;
 	private Line line;
 	private GameObject hook;
 	private float hookScale = 0.1f;
+	private float mass = 0;
 	
-	//public bool attachToCenterOfMass = false;
 	public LayerMask layerMask = -1;
-	//public bool doNotBreak = false;
 	public bool drawLine = true;
-	//public float spring = 50.0f;
-	//public float damper = 5.0f;
 	public float smooth = 5f;
-	//public float strength = 1f;
+	public float strength = 10f;
 	public float lineWidth = 0.1f;
 	public Material lineMaterial;
-	public float maxDistance = 40f;
+	public float maxDistance = Mathf.Infinity;
+	public bool deriveDistanceFromMass = false;
 	public float mouseHorizon = Mathf.Infinity;
 	public RestrictDimension restrict = new RestrictDimension();
-	
+
 	void FixedUpdate(){
 		mousePressed = Input.GetButton("Fire1");
 		if (!mousePressed){
@@ -48,27 +45,66 @@ public class SimpleDraggable : MonoBehaviour {
 		
 		if(!currentObject && !doesHit){previousMousePressed=true;return;}
 		if(!currentObject && previousMousePressed==true){previousMousePressed=true;return;}
+		if(currentObject && !doesHit){previousMousePressed=true;ReleaseCurrentObject();return;}
 		if(!currentObject){
 			SetCurrentObject(hit);
 		}
 		UpdateObject(hit);
 	}
 
+	static float setDimension(bool _restrict,float _old, float _new){
+		float r =  _restrict? _old : _new;
+		return r;
+	}
+
 	void UpdateObject(RaycastHit hit){
 		objectHitPoint = hit.point+offset;
-		Vector3 desiredPos = new Vector3(restrict.x?oldX:objectHitPoint.x,restrict.y?oldY:objectHitPoint.y,restrict.z?oldZ:objectHitPoint.z);
-		currentObject.position = Vector3.Lerp(currentObject.position, desiredPos,smooth*Time.deltaTime);
+		float X = setDimension(restrict.x,old.x,objectHitPoint.x);
+		float Y = setDimension(restrict.y,old.y,objectHitPoint.y);
+		float Z = setDimension(restrict.z,old.z,objectHitPoint.z);
+		Vector3 desiredPos = new Vector3(X,Y,Z);
+		if(maxDistance!=Mathf.Infinity && maxDistance>0){
+			float dist = Vector3.Distance(currentObject.position,desiredPos);
+			if(dist>maxDistance){
+				ReleaseCurrentObject();
+				return;
+			}
+		}
+		currentObject.position = Vector3.Lerp(currentObject.position, desiredPos,(smooth*Time.deltaTime)/(mass*10));
 		if(line){
 			line.SetPoints(currentObject.position-offset,hit.point);
 		}
+	}
+	
+	public static float GetMass(Collider collider,float density = 1){
+		float volume = 0;
+		float mass = 0;
+		if(collider.GetType() == typeof(SphereCollider)){
+			volume = (collider.bounds.size.x * Mathf.PI)/6;
+		}else if(collider.GetType() == typeof(CapsuleCollider)){
+			volume = ((Mathf.PI * collider.bounds.size.x * collider.bounds.size.y) * collider.bounds.size.z)/4;
+		}else{
+			volume = collider.bounds.size.x * collider.bounds.size.y * collider.bounds.size.z;
+		}
+		mass = (density * volume)/10;
+		return mass;
 	}
 
 	void SetCurrentObject(RaycastHit hit){
 		offset = hit.transform.position - hit.point;
 		if(hit.rigidbody){
 			rigidBodyKinematic = hit.rigidbody.isKinematic;
+			oldConstraints = hit.rigidbody.constraints;
+			hit.rigidbody.constraints = RigidbodyConstraints.FreezeRotation;
 			hit.rigidbody.isKinematic = true;
 			currentRigidBody = hit.rigidbody;
+			mass = hit.rigidbody.mass;
+		}else{
+			mass = SimpleDraggable.GetMass(hit.collider);
+			if(mass<=0){mass=1;}
+		}
+		if(deriveDistanceFromMass && mass>0){
+			maxDistance = strength/mass;
 		}
 		if(!hook){
 			hook = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -86,9 +122,9 @@ public class SimpleDraggable : MonoBehaviour {
 		hook.transform.position = hit.transform.position - offset;
 		hook.transform.parent = hit.transform;
 		currentObject = hit.transform;
-		oldY = currentObject.position.y;
-		oldX = currentObject.position.x;
-		oldZ = currentObject.position.z;
+		old.y = currentObject.position.y;
+		old.x = currentObject.position.x;
+		old.z = currentObject.position.z;
 		if(drawLine && line){
 			hook.renderer.enabled = true;
 			line.visible = true;
@@ -100,6 +136,7 @@ public class SimpleDraggable : MonoBehaviour {
 			currentObject = null;
 			if(currentRigidBody){
 				currentRigidBody.isKinematic = rigidBodyKinematic;
+				currentRigidBody.constraints = oldConstraints;
 				currentRigidBody = null;
 			}
 		}
