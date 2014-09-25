@@ -2,6 +2,8 @@
 
 Here are a few scripts to move objects around.
 
+[test it here](http://xananax.github.io/unity-manipulateObjectsTest)
+
 Mainly you'll find:
 
 ## Draggable.cs
